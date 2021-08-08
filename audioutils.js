@@ -13,16 +13,6 @@ var SizeChunker = chunkingStreams.SizeChunker;
 
 
 
-const generateNoiseStream = () => {
-    var n = 0;
-    return baudio(function (t) {
-        var x = Math.sin(t * 262 + Math.sin(n));
-        n += Math.sin(t);
-        return x;
-    });
-
-}
-
 const getSpeakerStream = () => {
     const speaker = new Speaker({
         channels: 1,          
@@ -32,47 +22,26 @@ const getSpeakerStream = () => {
       return speaker
 }
 
-
-// TODO: this is not working, just an idea
-const createWSAudioStream = () => {
-    const readable = new Readable()
-    
-    readable._read = () => {} // _read is required but you can noop it
-    
-
-    return readable
-    
-}
-
 const writeWSMsgIntoSpeaker = (speaker, msg) => {
     if(isBuffer(msg)){
         try {
             speaker.write(msg);        
-         }
-         catch (e) {
-            
-         }
+         } catch (e) {}
     }
 }
 
 
-const startStreamMicAudioIntoWebSocket = (ws) => {
-    
+const startStreamMicAudioIntoWebSocket = (ws) => {  
     var micInstance = mic({
         rate: '16000',
         channels: 1
     });
-
     var chunker = new SizeChunker({
         chunkSize: 640 // must be a number greater than zero. 
-    });
-    
+    });  
     var micInputStream = micInstance.getAudioStream();
     micInputStream.pipe(chunker);
     micInstance.start();
-
-
-    // speaker.start()//??
     chunker.on('data', function(chunk) {
         const data = chunk.data;
         var buf;
@@ -95,15 +64,10 @@ const startStreamMicAudioIntoWebSocket = (ws) => {
             }
         }
     });
-
-
-
 }
 
 module.exports = {
     getSpeakerStream,
-    generateNoiseStream,
-    createWSAudioStream,
     writeWSMsgIntoSpeaker,
     startStreamMicAudioIntoWebSocket
 }
